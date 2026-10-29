@@ -51,4 +51,12 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    // Persistencia local de ingresos y gastos
+    implementation("androidx.datastore:datastore-preferences:1.1.7")
+
+    // ViewModel para Android
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4")
+
+
 }

@@ -58,8 +58,14 @@ fun PantallaInicio(
 ) {
     val uiState = viewModel.uiState
 
+    // Controla la apertura del formulario
     var mostrarFormulario by remember {
         mutableStateOf(false)
+    }
+
+    // Guarda el ID del movimiento que se desea eliminar
+    var movimientoAEliminar by remember {
+        mutableStateOf<Long?>(null)
     }
 
     Column(
@@ -70,6 +76,8 @@ fun PantallaInicio(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
+
+        // Título de la aplicación
         Text(
             text = "MiBolsillo",
             fontSize = 30.sp,
@@ -83,6 +91,7 @@ fun PantallaInicio(
             color = Color.DarkGray
         )
 
+        // Tarjeta principal del saldo disponible
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -120,6 +129,7 @@ fun PantallaInicio(
             }
         }
 
+        // Resumen de ingresos y gastos
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxWidth()
@@ -139,6 +149,7 @@ fun PantallaInicio(
             )
         }
 
+        // Botón para registrar movimientos
         Button(
             onClick = {
                 mostrarFormulario = true
@@ -155,6 +166,7 @@ fun PantallaInicio(
             )
         }
 
+        // Historial de movimientos
         Text(
             text = "Movimientos recientes",
             fontSize = 21.sp,
@@ -186,12 +198,16 @@ fun PantallaInicio(
                         cantidad = signo + formatoMoneda(
                             movimiento.monto
                         ),
-                        color = if (esIngreso) Verde else Rojo
+                        color = if (esIngreso) Verde else Rojo,
+                        alEliminar = {
+                            movimientoAEliminar = movimiento.id
+                        }
                     )
                 }
         }
     }
 
+    // Formulario para agregar ingresos o gastos
     if (mostrarFormulario) {
         FormularioMovimiento(
             alCerrar = {
@@ -209,6 +225,51 @@ fun PantallaInicio(
             }
         )
     }
+
+    // Confirmación antes de eliminar un movimiento
+    if (movimientoAEliminar != null) {
+        AlertDialog(
+            onDismissRequest = {
+                movimientoAEliminar = null
+            },
+            title = {
+                Text(
+                    text = "Eliminar movimiento",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "¿Estás segura de que deseas eliminar este movimiento? Esta acción no se puede deshacer."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        movimientoAEliminar?.let { id ->
+                            viewModel.eliminarMovimiento(id)
+                        }
+
+                        movimientoAEliminar = null
+                    }
+                ) {
+                    Text(
+                        text = "Eliminar",
+                        color = Rojo
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        movimientoAEliminar = null
+                    }
+                ) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 }
 
 @Preview(
@@ -218,9 +279,11 @@ fun PantallaInicio(
 @Composable
 fun PantallaInicioPreview() {
     MiBolsilloTheme {
+        val contexto = androidx.compose.ui.platform.LocalContext.current
+        val aplicacion = contexto.applicationContext as android.app.Application
+
         PantallaInicio(
-            viewModel = InicioViewModel()
+            viewModel = InicioViewModel(aplicacion)
         )
     }
 }
-

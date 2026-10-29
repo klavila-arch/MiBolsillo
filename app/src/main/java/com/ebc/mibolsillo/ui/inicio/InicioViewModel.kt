@@ -1,16 +1,31 @@
 
 package com.ebc.mibolsillo.ui.inicio
 
+import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.ebc.mibolsillo.data.MovimientoFinanciero
+import com.ebc.mibolsillo.data.MovimientoStorage
+import kotlinx.coroutines.launch
 
-class InicioViewModel : ViewModel() {
+class InicioViewModel(application: Application) :
+    AndroidViewModel(application) {
+
+    private val storage = MovimientoStorage(application)
 
     var uiState by mutableStateOf(InicioUiState())
         private set
+
+    init {
+        viewModelScope.launch {
+            storage.movimientos.collect { lista ->
+                actualizarEstado(lista)
+            }
+        }
+    }
 
     fun agregarMovimiento(
         tipo: String,
@@ -31,19 +46,43 @@ class InicioViewModel : ViewModel() {
 
         val nuevaLista = uiState.movimientos + nuevoMovimiento
 
-        val totalIngresos = nuevaLista
+        actualizarEstado(nuevaLista)
+
+        viewModelScope.launch {
+            storage.guardarMovimientos(nuevaLista)
+        }
+    }
+
+    // Elimina un movimiento por su identificador
+    fun eliminarMovimiento(id: Long) {
+        val nuevaLista = uiState.movimientos.filter { movimiento ->
+            movimiento.id != id
+        }
+
+        actualizarEstado(nuevaLista)
+
+        viewModelScope.launch {
+            storage.guardarMovimientos(nuevaLista)
+        }
+    }
+
+    // Recalcula ingresos, gastos y saldo disponible
+    private fun actualizarEstado(
+        lista: List<MovimientoFinanciero>
+    ) {
+        val ingresos = lista
             .filter { it.tipo == "Ingreso" }
             .sumOf { it.monto }
 
-        val totalGastos = nuevaLista
+        val gastos = lista
             .filter { it.tipo == "Gasto" }
             .sumOf { it.monto }
 
         uiState = InicioUiState(
-            ingresos = totalIngresos,
-            gastos = totalGastos,
-            saldoDisponible = totalIngresos - totalGastos,
-            movimientos = nuevaLista
+            ingresos = ingresos,
+            gastos = gastos,
+            saldoDisponible = ingresos - gastos,
+            movimientos = lista
         )
     }
 }

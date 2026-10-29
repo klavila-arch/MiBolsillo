@@ -3,9 +3,7 @@ package com.ebc.mibolsillo.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,7 +17,8 @@ fun MovimientoItem(
     concepto: String,
     categoria: String,
     cantidad: String,
-    color: Color
+    color: Color,
+    alEliminar: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -31,11 +30,13 @@ fun MovimientoItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
                 Text(
                     text = concepto,
                     fontWeight = FontWeight.SemiBold,
@@ -55,6 +56,17 @@ fun MovimientoItem(
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp
             )
+
+            TextButton(
+                onClick = alEliminar,
+                contentPadding = PaddingValues(horizontal = 8.dp)
+            ) {
+                Text(
+                    text = "Eliminar",
+                    color = Color(0xFFC74444),
+                    fontSize = 12.sp
+                )
+            }
         }
     }
 }
