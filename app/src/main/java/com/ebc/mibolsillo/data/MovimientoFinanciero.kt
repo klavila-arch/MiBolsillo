@@ -1,4 +1,3 @@
-
 package com.ebc.mibolsillo.data
 
 data class MovimientoFinanciero(
@@ -6,5 +5,6 @@ data class MovimientoFinanciero(
     val tipo: String,
     val monto: Double,
     val categoria: String,
-    val descripcion: String
+    val descripcion: String,
+    val fecha: Long = id
 )

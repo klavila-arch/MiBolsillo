@@ -1,6 +1,5 @@
 package com.ebc.mibolsillo.data
 
-
 import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -21,6 +20,7 @@ class MovimientoStorage(private val context: Context) {
 
     val movimientos: Flow<List<MovimientoFinanciero>> =
         context.movimientosDataStore.data.map { preferencias ->
+
             val json = preferencias[movimientosKey] ?: "[]"
 
             try {
@@ -28,16 +28,18 @@ class MovimientoStorage(private val context: Context) {
 
                 List(arreglo.length()) { indice ->
                     val objeto = arreglo.getJSONObject(indice)
+                    val id = objeto.getLong("id")
 
                     MovimientoFinanciero(
-                        id = objeto.getLong("id"),
+                        id = id,
                         tipo = objeto.getString("tipo"),
                         monto = objeto.getDouble("monto"),
                         categoria = objeto.getString("categoria"),
-                        descripcion = objeto.getString("descripcion")
+                        descripcion = objeto.getString("descripcion"),
+                        fecha = objeto.optLong("fecha", id)
                     )
                 }
-            } catch (e: org.json.JSONException) {
+            } catch (_: org.json.JSONException) {
                 emptyList()
             }
         }
@@ -54,6 +56,7 @@ class MovimientoStorage(private val context: Context) {
                 put("monto", movimiento.monto)
                 put("categoria", movimiento.categoria)
                 put("descripcion", movimiento.descripcion)
+                put("fecha", movimiento.fecha)
             }
 
             arreglo.put(objeto)

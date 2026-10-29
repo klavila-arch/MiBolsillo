@@ -1,6 +1,6 @@
-
 package com.ebc.mibolsillo
 
+import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,21 +8,22 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ebc.mibolsillo.ui.theme.MiBolsilloTheme
-import com.ebc.mibolsillo.ui.components.TarjetaResumen
 import com.ebc.mibolsillo.ui.components.MovimientoItem
-import com.ebc.mibolsillo.ui.movimientos.FormularioMovimiento
+import com.ebc.mibolsillo.ui.components.TarjetaResumen
 import com.ebc.mibolsillo.ui.inicio.InicioViewModel
+import com.ebc.mibolsillo.ui.movimientos.FormularioMovimiento
+import com.ebc.mibolsillo.ui.theme.MiBolsilloTheme
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -46,7 +47,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MiBolsilloTheme {
-                PantallaInicio(inicioViewModel)
+                PantallaInicio(
+                    viewModel = inicioViewModel
+                )
             }
         }
     }
@@ -214,6 +217,7 @@ fun PantallaInicio(
                 mostrarFormulario = false
             },
             alGuardar = { tipo, monto, categoria, descripcion ->
+
                 viewModel.agregarMovimiento(
                     tipo = tipo,
                     monto = monto,
@@ -279,8 +283,9 @@ fun PantallaInicio(
 @Composable
 fun PantallaInicioPreview() {
     MiBolsilloTheme {
-        val contexto = androidx.compose.ui.platform.LocalContext.current
-        val aplicacion = contexto.applicationContext as android.app.Application
+        val contexto = LocalContext.current
+        val aplicacion =
+            contexto.applicationContext as Application
 
         PantallaInicio(
             viewModel = InicioViewModel(aplicacion)
