@@ -1,3 +1,4 @@
+
 package com.ebc.mibolsillo.ui.inicio
 
 import android.app.Application
@@ -26,13 +27,12 @@ class InicioViewModel(application: Application) :
         }
     }
 
-    // Registra un ingreso o gasto con su fecha
     fun agregarMovimiento(
         tipo: String,
         monto: Double,
         categoria: String,
         descripcion: String,
-        fecha: Long = System.currentTimeMillis()
+        fecha: Long
     ) {
         if (monto <= 0.0 || !monto.isFinite()) return
         if (tipo != "Ingreso" && tipo != "Gasto") return

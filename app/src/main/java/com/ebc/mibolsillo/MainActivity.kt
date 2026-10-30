@@ -1,3 +1,4 @@
+
 package com.ebc.mibolsillo
 
 import android.app.Application
@@ -27,17 +28,20 @@ import com.ebc.mibolsillo.ui.theme.MiBolsilloTheme
 import java.text.NumberFormat
 import java.util.Locale
 
+// Colores de MiBolsillo
 private val Azul = Color(0xFF2358C8)
 private val Fondo = Color(0xFFF5F7FB)
 private val Verde = Color(0xFF16865D)
 private val Rojo = Color(0xFFC74444)
 
+// Formato de moneda mexicana
 fun formatoMoneda(cantidad: Double): String {
     return NumberFormat.getCurrencyInstance(
         Locale.forLanguageTag("es-MX")
     ).format(cantidad)
 }
 
+// Actividad principal
 class MainActivity : ComponentActivity() {
 
     private val inicioViewModel: InicioViewModel by viewModels()
@@ -55,18 +59,19 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// Pantalla principal
 @Composable
 fun PantallaInicio(
     viewModel: InicioViewModel
 ) {
     val uiState = viewModel.uiState
 
-    // Controla la apertura del formulario
+    // Control del formulario
     var mostrarFormulario by remember {
         mutableStateOf(false)
     }
 
-    // Guarda el ID del movimiento que se desea eliminar
+    // Movimiento seleccionado para eliminar
     var movimientoAEliminar by remember {
         mutableStateOf<Long?>(null)
     }
@@ -80,7 +85,7 @@ fun PantallaInicio(
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
 
-        // Título de la aplicación
+        // Título
         Text(
             text = "MiBolsillo",
             fontSize = 30.sp,
@@ -94,7 +99,7 @@ fun PantallaInicio(
             color = Color.DarkGray
         )
 
-        // Tarjeta principal del saldo disponible
+        // Tarjeta de saldo disponible
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -169,7 +174,7 @@ fun PantallaInicio(
             )
         }
 
-        // Historial de movimientos
+        // Historial
         Text(
             text = "Movimientos recientes",
             fontSize = 21.sp,
@@ -178,22 +183,28 @@ fun PantallaInicio(
         )
 
         if (uiState.movimientos.isEmpty()) {
+
             Text(
                 text = "Todavía no tienes movimientos registrados.",
                 color = Color.DarkGray,
                 fontSize = 14.sp
             )
+
         } else {
+
+            // Ordenar por fecha: más recientes primero
             uiState.movimientos
-                .asReversed()
+                .sortedByDescending { it.fecha }
                 .forEach { movimiento ->
 
-                    val esIngreso = movimiento.tipo == "Ingreso"
+                    val esIngreso =
+                        movimiento.tipo == "Ingreso"
 
                     val concepto = movimiento.descripcion
                         .ifBlank { movimiento.categoria }
 
-                    val signo = if (esIngreso) "+" else "-"
+                    val signo =
+                        if (esIngreso) "+" else "-"
 
                     MovimientoItem(
                         concepto = concepto,
@@ -202,6 +213,7 @@ fun PantallaInicio(
                             movimiento.monto
                         ),
                         color = if (esIngreso) Verde else Rojo,
+                        fecha = movimiento.fecha,
                         alEliminar = {
                             movimientoAEliminar = movimiento.id
                         }
@@ -210,19 +222,26 @@ fun PantallaInicio(
         }
     }
 
-    // Formulario para agregar ingresos o gastos
+    // Formulario para registrar movimientos
     if (mostrarFormulario) {
+
         FormularioMovimiento(
             alCerrar = {
                 mostrarFormulario = false
             },
-            alGuardar = { tipo, monto, categoria, descripcion ->
+            alGuardar = {
+                    tipo,
+                    monto,
+                    categoria,
+                    descripcion,
+                    fecha ->
 
                 viewModel.agregarMovimiento(
                     tipo = tipo,
                     monto = monto,
                     categoria = categoria,
-                    descripcion = descripcion
+                    descripcion = descripcion,
+                    fecha = fecha
                 )
 
                 mostrarFormulario = false
@@ -230,8 +249,9 @@ fun PantallaInicio(
         )
     }
 
-    // Confirmación antes de eliminar un movimiento
+    // Confirmación para eliminar movimientos
     if (movimientoAEliminar != null) {
+
         AlertDialog(
             onDismissRequest = {
                 movimientoAEliminar = null
@@ -276,14 +296,18 @@ fun PantallaInicio(
     }
 }
 
+// Vista previa
 @Preview(
     showBackground = true,
     showSystemUi = true
 )
 @Composable
 fun PantallaInicioPreview() {
+
     MiBolsilloTheme {
+
         val contexto = LocalContext.current
+
         val aplicacion =
             contexto.applicationContext as Application
 
