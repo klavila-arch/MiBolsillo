@@ -26,6 +26,7 @@ import com.ebc.mibolsillo.ui.inicio.InicioViewModel
 import com.ebc.mibolsillo.ui.movimientos.FormularioMovimiento
 import com.ebc.mibolsillo.ui.theme.MiBolsilloTheme
 import java.text.NumberFormat
+import java.util.Calendar
 import java.util.Locale
 
 // Colores de MiBolsillo
@@ -74,6 +75,98 @@ fun PantallaInicio(
     // Movimiento seleccionado para eliminar
     var movimientoAEliminar by remember {
         mutableStateOf<Long?>(null)
+    }
+
+    // Fecha actual
+    val calendarioActual = remember {
+        Calendar.getInstance()
+    }
+
+    // Mes y año seleccionados
+    var mesSeleccionado by remember {
+        mutableIntStateOf(
+            calendarioActual.get(Calendar.MONTH)
+        )
+    }
+
+    var anioSeleccionado by remember {
+        mutableIntStateOf(
+            calendarioActual.get(Calendar.YEAR)
+        )
+    }
+
+    // Permite consultar todos los movimientos
+    var mostrarTodos by remember {
+        mutableStateOf(false)
+    }
+
+    // Control de los menús
+    var menuMesAbierto by remember {
+        mutableStateOf(false)
+    }
+
+    var menuAnioAbierto by remember {
+        mutableStateOf(false)
+    }
+
+    val nombresMeses = listOf(
+        "Enero",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto",
+        "Septiembre",
+        "Octubre",
+        "Noviembre",
+        "Diciembre"
+    )
+
+    // Años disponibles según los movimientos registrados
+    val aniosDisponibles = remember(
+        uiState.movimientos,
+        anioSeleccionado
+    ) {
+        (
+                uiState.movimientos.map { movimiento ->
+                    Calendar.getInstance().apply {
+                        timeInMillis = movimiento.fecha
+                    }.get(Calendar.YEAR)
+                } + anioSeleccionado
+                ).distinct().sortedDescending()
+    }
+
+    // Filtrar movimientos por mes y año
+    val movimientosFiltrados = remember(
+        uiState.movimientos,
+        mesSeleccionado,
+        anioSeleccionado,
+        mostrarTodos
+    ) {
+        uiState.movimientos
+            .filter { movimiento ->
+
+                if (mostrarTodos) {
+                    true
+                } else {
+                    val calendarioMovimiento =
+                        Calendar.getInstance().apply {
+                            timeInMillis = movimiento.fecha
+                        }
+
+                    val mesMovimiento =
+                        calendarioMovimiento.get(Calendar.MONTH)
+
+                    val anioMovimiento =
+                        calendarioMovimiento.get(Calendar.YEAR)
+
+                    mesMovimiento == mesSeleccionado &&
+                            anioMovimiento == anioSeleccionado
+                }
+            }
+            .sortedByDescending { it.fecha }
     }
 
     Column(
@@ -182,43 +275,175 @@ fun PantallaInicio(
             color = Color(0xFF202635)
         )
 
-        if (uiState.movimientos.isEmpty()) {
+        // Selector de periodo
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+
+                Text(
+                    text = "Filtrar por fecha",
+                    fontWeight = FontWeight.SemiBold,
+                    color = Azul
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+
+                    // Selector de mes
+                    Box(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                menuMesAbierto = true
+                            },
+                            enabled = !mostrarTodos,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = nombresMeses[mesSeleccionado],
+                                maxLines = 1
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = menuMesAbierto,
+                            onDismissRequest = {
+                                menuMesAbierto = false
+                            }
+                        ) {
+                            nombresMeses.forEachIndexed {
+                                    indice, nombre ->
+
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(nombre)
+                                    },
+                                    onClick = {
+                                        mesSeleccionado = indice
+                                        menuMesAbierto = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    // Selector de año
+                    Box(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                menuAnioAbierto = true
+                            },
+                            enabled = !mostrarTodos,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = anioSeleccionado.toString()
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = menuAnioAbierto,
+                            onDismissRequest = {
+                                menuAnioAbierto = false
+                            }
+                        ) {
+                            aniosDisponibles.forEach { anio ->
+
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(anio.toString())
+                                    },
+                                    onClick = {
+                                        anioSeleccionado = anio
+                                        menuAnioAbierto = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Mostrar todos",
+                        color = Color.DarkGray
+                    )
+
+                    Switch(
+                        checked = mostrarTodos,
+                        onCheckedChange = {
+                            mostrarTodos = it
+                        }
+                    )
+                }
+
+                Text(
+                    text = if (mostrarTodos) {
+                        "Mostrando todos los movimientos"
+                    } else {
+                        "Periodo: ${nombresMeses[mesSeleccionado]} de $anioSeleccionado"
+                    },
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+            }
+        }
+
+        // Lista de movimientos filtrados
+        if (movimientosFiltrados.isEmpty()) {
 
             Text(
-                text = "Todavía no tienes movimientos registrados.",
+                text = if (uiState.movimientos.isEmpty()) {
+                    "Todavía no tienes movimientos registrados."
+                } else {
+                    "No hay movimientos registrados en este periodo."
+                },
                 color = Color.DarkGray,
                 fontSize = 14.sp
             )
 
         } else {
 
-            // Ordenar por fecha: más recientes primero
-            uiState.movimientos
-                .sortedByDescending { it.fecha }
-                .forEach { movimiento ->
+            movimientosFiltrados.forEach { movimiento ->
 
-                    val esIngreso =
-                        movimiento.tipo == "Ingreso"
+                val esIngreso =
+                    movimiento.tipo == "Ingreso"
 
-                    val concepto = movimiento.descripcion
-                        .ifBlank { movimiento.categoria }
+                val concepto = movimiento.descripcion
+                    .ifBlank { movimiento.categoria }
 
-                    val signo =
-                        if (esIngreso) "+" else "-"
+                val signo =
+                    if (esIngreso) "+" else "-"
 
-                    MovimientoItem(
-                        concepto = concepto,
-                        categoria = movimiento.categoria,
-                        cantidad = signo + formatoMoneda(
-                            movimiento.monto
-                        ),
-                        color = if (esIngreso) Verde else Rojo,
-                        fecha = movimiento.fecha,
-                        alEliminar = {
-                            movimientoAEliminar = movimiento.id
-                        }
-                    )
-                }
+                MovimientoItem(
+                    concepto = concepto,
+                    categoria = movimiento.categoria,
+                    cantidad = signo + formatoMoneda(
+                        movimiento.monto
+                    ),
+                    color = if (esIngreso) Verde else Rojo,
+                    fecha = movimiento.fecha,
+                    alEliminar = {
+                        movimientoAEliminar = movimiento.id
+                    }
+                )
+            }
         }
     }
 
