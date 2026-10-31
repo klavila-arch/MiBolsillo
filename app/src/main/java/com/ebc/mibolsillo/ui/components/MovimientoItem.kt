@@ -12,6 +12,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -21,6 +22,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+private val Azul = Color(0xFF2358C8)
 private val Rojo = Color(0xFFC74444)
 
 private fun formatearFecha(fecha: Long): String {
@@ -38,6 +40,7 @@ fun MovimientoItem(
     cantidad: String,
     color: Color,
     fecha: Long,
+    alEditar: () -> Unit,
     alEliminar: () -> Unit
 ) {
     Card(
@@ -51,7 +54,8 @@ fun MovimientoItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
                 modifier = Modifier.weight(1f),
@@ -77,7 +81,9 @@ fun MovimientoItem(
                 )
             }
 
-            Column {
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
                 Text(
                     text = cantidad,
                     color = color,
@@ -85,14 +91,37 @@ fun MovimientoItem(
                     fontSize = 14.sp
                 )
 
-                TextButton(
-                    onClick = alEliminar
+                Row(
+                    horizontalArrangement =
+                        Arrangement.spacedBy(0.dp)
                 ) {
-                    Text(
-                        text = "Eliminar",
-                        color = Rojo,
-                        fontSize = 12.sp
-                    )
+                    TextButton(
+                        onClick = alEditar,
+                        contentPadding =
+                            androidx.compose.foundation.layout.PaddingValues(
+                                horizontal = 8.dp
+                            )
+                    ) {
+                        Text(
+                            text = "Editar",
+                            color = Azul,
+                            fontSize = 12.sp
+                        )
+                    }
+
+                    TextButton(
+                        onClick = alEliminar,
+                        contentPadding =
+                            androidx.compose.foundation.layout.PaddingValues(
+                                horizontal = 8.dp
+                            )
+                    ) {
+                        Text(
+                            text = "Eliminar",
+                            color = Rojo,
+                            fontSize = 12.sp
+                        )
+                    }
                 }
             }
         }

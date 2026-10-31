@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.ebc.mibolsillo.data.MovimientoFinanciero
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -30,22 +31,46 @@ fun FormularioMovimiento(
         categoria: String,
         descripcion: String,
         fecha: Long
-    ) -> Unit
+    ) -> Unit,
+    movimientoEditar: MovimientoFinanciero? = null
 ) {
-    var tipo by remember { mutableStateOf("Gasto") }
-    var monto by remember { mutableStateOf("") }
-    var descripcion by remember { mutableStateOf("") }
-    var categoria by remember {
-        mutableStateOf("Alimentación")
+    val editando = movimientoEditar != null
+
+    var tipo by remember(movimientoEditar?.id) {
+        mutableStateOf(movimientoEditar?.tipo ?: "Gasto")
     }
+
+    var monto by remember(movimientoEditar?.id) {
+        mutableStateOf(
+            movimientoEditar?.monto?.toString() ?: ""
+        )
+    }
+
+    var descripcion by remember(movimientoEditar?.id) {
+        mutableStateOf(
+            movimientoEditar?.descripcion ?: ""
+        )
+    }
+
+    var categoria by remember(movimientoEditar?.id) {
+        mutableStateOf(
+            movimientoEditar?.categoria ?: "Alimentación"
+        )
+    }
+
     var menuAbierto by remember {
         mutableStateOf(false)
     }
+
     var mostrarCalendario by remember {
         mutableStateOf(false)
     }
-    var fechaSeleccionada by remember {
-        mutableLongStateOf(System.currentTimeMillis())
+
+    var fechaSeleccionada by remember(movimientoEditar?.id) {
+        mutableLongStateOf(
+            movimientoEditar?.fecha
+                ?: System.currentTimeMillis()
+        )
     }
 
     val formatoFecha = remember {
@@ -87,7 +112,11 @@ fun FormularioMovimiento(
         onDismissRequest = alCerrar,
         title = {
             Text(
-                text = "Registrar movimiento",
+                text = if (editando) {
+                    "Editar movimiento"
+                } else {
+                    "Registrar movimiento"
+                },
                 fontWeight = FontWeight.Bold
             )
         },
@@ -96,9 +125,8 @@ fun FormularioMovimiento(
                 modifier = Modifier.verticalScroll(
                     rememberScrollState()
                 ),
-                verticalArrangement = Arrangement.spacedBy(
-                    12.dp
-                )
+                verticalArrangement =
+                    Arrangement.spacedBy(12.dp)
             ) {
                 Text("Selecciona el tipo de movimiento")
 
@@ -207,7 +235,14 @@ fun FormularioMovimiento(
                 },
                 enabled = montoValido
             ) {
-                Text("Guardar", color = Azul)
+                Text(
+                    text = if (editando) {
+                        "Guardar cambios"
+                    } else {
+                        "Guardar"
+                    },
+                    color = Azul
+                )
             }
         },
         dismissButton = {
@@ -250,7 +285,10 @@ fun FormularioMovimiento(
                                             0,
                                             0
                                         )
-                                        set(Calendar.MILLISECOND, 0)
+                                        set(
+                                            Calendar.MILLISECOND,
+                                            0
+                                        )
                                     }
 
                                 fechaSeleccionada =

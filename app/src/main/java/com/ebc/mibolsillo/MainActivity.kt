@@ -1,4 +1,3 @@
-
 package com.ebc.mibolsillo
 
 import android.app.Application
@@ -20,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ebc.mibolsillo.data.MovimientoFinanciero
 import com.ebc.mibolsillo.ui.components.MovimientoItem
 import com.ebc.mibolsillo.ui.components.TarjetaResumen
 import com.ebc.mibolsillo.ui.inicio.InicioViewModel
@@ -70,6 +70,11 @@ fun PantallaInicio(
     // Control del formulario
     var mostrarFormulario by remember {
         mutableStateOf(false)
+    }
+
+    // Movimiento seleccionado para editar
+    var movimientoAEditar by remember {
+        mutableStateOf<MovimientoFinanciero?>(null)
     }
 
     // Movimiento seleccionado para eliminar
@@ -253,6 +258,7 @@ fun PantallaInicio(
         // Botón para registrar movimientos
         Button(
             onClick = {
+                movimientoAEditar = null
                 mostrarFormulario = true
             },
             modifier = Modifier.fillMaxWidth(),
@@ -439,6 +445,9 @@ fun PantallaInicio(
                     ),
                     color = if (esIngreso) Verde else Rojo,
                     fecha = movimiento.fecha,
+                    alEditar = {
+                        movimientoAEditar = movimiento
+                    },
                     alEliminar = {
                         movimientoAEliminar = movimiento.id
                     }
@@ -470,6 +479,28 @@ fun PantallaInicio(
                 )
 
                 mostrarFormulario = false
+            }
+        )
+    }
+
+    // Formulario para editar un movimiento existente
+    movimientoAEditar?.let { movimiento ->
+        FormularioMovimiento(
+            movimientoEditar = movimiento,
+            alCerrar = {
+                movimientoAEditar = null
+            },
+            alGuardar = { tipo, monto, categoria, descripcion, fecha ->
+                viewModel.editarMovimiento(
+                    movimiento.copy(
+                        tipo = tipo,
+                        monto = monto,
+                        categoria = categoria,
+                        descripcion = descripcion,
+                        fecha = fecha
+                    )
+                )
+                movimientoAEditar = null
             }
         )
     }

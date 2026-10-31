@@ -27,6 +27,7 @@ class InicioViewModel(application: Application) :
         }
     }
 
+    // Registrar un movimiento nuevo
     fun agregarMovimiento(
         tipo: String,
         monto: Double,
@@ -46,7 +47,8 @@ class InicioViewModel(application: Application) :
             fecha = fecha
         )
 
-        val nuevaLista = uiState.movimientos + nuevoMovimiento
+        val nuevaLista =
+            uiState.movimientos + nuevoMovimiento
 
         actualizarEstado(nuevaLista)
 
@@ -55,7 +57,46 @@ class InicioViewModel(application: Application) :
         }
     }
 
-    // Elimina un movimiento por su identificador
+    // Editar un movimiento existente
+    fun editarMovimiento(
+        movimientoActualizado: MovimientoFinanciero
+    ) {
+        if (
+            movimientoActualizado.monto <= 0.0 ||
+            !movimientoActualizado.monto.isFinite()
+        ) {
+            return
+        }
+
+        if (
+            movimientoActualizado.tipo != "Ingreso" &&
+            movimientoActualizado.tipo != "Gasto"
+        ) {
+            return
+        }
+
+        val existeMovimiento = uiState.movimientos.any {
+            it.id == movimientoActualizado.id
+        }
+
+        if (!existeMovimiento) return
+
+        val nuevaLista = uiState.movimientos.map { movimiento ->
+            if (movimiento.id == movimientoActualizado.id) {
+                movimientoActualizado
+            } else {
+                movimiento
+            }
+        }
+
+        actualizarEstado(nuevaLista)
+
+        viewModelScope.launch {
+            storage.guardarMovimientos(nuevaLista)
+        }
+    }
+
+    // Eliminar un movimiento por su identificador
     fun eliminarMovimiento(id: Long) {
         val nuevaLista = uiState.movimientos.filter { movimiento ->
             movimiento.id != id
@@ -68,7 +109,7 @@ class InicioViewModel(application: Application) :
         }
     }
 
-    // Recalcula ingresos, gastos y saldo disponible
+    // Recalcular ingresos, gastos y saldo disponible
     private fun actualizarEstado(
         lista: List<MovimientoFinanciero>
     ) {
