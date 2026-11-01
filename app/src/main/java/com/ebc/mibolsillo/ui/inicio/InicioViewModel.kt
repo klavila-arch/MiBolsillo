@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.ebc.mibolsillo.data.MovimientoFinanciero
 import com.ebc.mibolsillo.data.MovimientoStorage
 import kotlinx.coroutines.launch
+import com.ebc.mibolsillo.data.calcularResumenFinanciero
 
 class InicioViewModel(application: Application) :
     AndroidViewModel(application) {
@@ -110,21 +111,16 @@ class InicioViewModel(application: Application) :
     }
 
     // Recalcular ingresos, gastos y saldo disponible
+
     private fun actualizarEstado(
         lista: List<MovimientoFinanciero>
     ) {
-        val ingresos = lista
-            .filter { it.tipo == "Ingreso" }
-            .sumOf { it.monto }
-
-        val gastos = lista
-            .filter { it.tipo == "Gasto" }
-            .sumOf { it.monto }
+        val resumen = calcularResumenFinanciero(lista)
 
         uiState = InicioUiState(
-            ingresos = ingresos,
-            gastos = gastos,
-            saldoDisponible = ingresos - gastos,
+            ingresos = resumen.ingresos,
+            gastos = resumen.gastos,
+            saldoDisponible = resumen.saldoDisponible,
             movimientos = lista
         )
     }
